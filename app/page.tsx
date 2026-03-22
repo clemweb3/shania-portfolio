@@ -1,15 +1,18 @@
+import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import WhatIDo from "@/components/WhatIDo";
+import Experience from "@/components/Experience";
 import Projects from "@/components/Projects";
-import AuthorsNotes from "@/components/AuthorsNotes";
+import About from "@/components/About";
 import Contact from "@/components/Contact";
 
 export default function Home() {
   return (
-    <main className="bg-[#0A0F1F] text-[#E5E9F0] font-sans">
+    <main className="bg-[#080808]">
+      <Navbar />
       <Hero />
+      <Experience />
       <Projects />
-      <AuthorsNotes />
+      <About />
       <Contact />
     </main>
   );
