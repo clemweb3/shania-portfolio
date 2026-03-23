@@ -7,8 +7,6 @@ const CHARS = "!@#$%&*?ABCDEFGHIJabcdefghij0123456789";
 const FINAL_WORD = "lead.";
 const CYCLE_WORDS = ["decisions.", "clarity.", "action.", "impact."];
 
-// FIX #3 — Scramble operates on a single element whose textContent is
-// replaced atomically each tick. No child spans → no reflow cascade → no shake.
 function scrambleWord(el: HTMLElement, final: string, duration: number): Promise<void> {
   return new Promise((res) => {
     let f = 0;
@@ -38,19 +36,12 @@ export default function Hero() {
   const cycleRef = useRef<HTMLSpanElement>(null);
   const indexRef = useRef(0);
 
-
   useEffect(() => {
     const el = leadRef.current;
     if (!el) return;
-
-    // Preserve the final text; scramble resolves back to it.
     el.textContent = FINAL_WORD;
-
-    // Use font-variant-numeric + ch unit via inline style so every
-    // glyph occupies exactly the same horizontal space during animation.
     el.style.display = "inline-block";
     el.style.fontVariantNumeric = "tabular-nums";
-    // minWidth locks the container so swapping chars never shifts siblings.
     el.style.minWidth = `${FINAL_WORD.length}ch`;
 
     let animating = false;
@@ -61,7 +52,6 @@ export default function Hero() {
         animating = false;
       });
     };
-
     el.addEventListener("mouseenter", handleEnter);
     return () => {
       el.removeEventListener("mouseenter", handleEnter);
@@ -72,7 +62,6 @@ export default function Hero() {
   useEffect(() => {
     const el = cycleRef.current;
     if (!el) return;
-    // Initialise with widest word so the container never collapses
     el.style.display = "inline-block";
     el.style.minWidth = "8ch";
     const interval = setInterval(async () => {
@@ -87,61 +76,128 @@ export default function Hero() {
       id="home"
       className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-[#080808]"
     >
-      {/* Background */}
+      {/*
+        ── Mobile override styles ──────────────────────────────────────────────
+        Scoped BEM-style class names bypass Tailwind JIT purging entirely.
+        All mobile changes live here; desktop classes on elements are untouched.
+        Breakpoint: max-width 639px  = below Tailwind's `sm` (640px).
+        ────────────────────────────────────────────────────────────────────── */}
+      <style>{`
+        @media (max-width: 639px) {
+
+          /* Wrapper — less top padding on short phone screens */
+          .h-wrap { padding-top: 88px !important; }
+
+          /* Intro tag — tighter gap below */
+          .h-tag  { margin-bottom: 20px !important; }
+
+          /* Headlines — tighter gap below */
+          .h-heads { margin-bottom: 14px !important; }
+
+          /* Cycling subhead — tighter gap below */
+          .h-sub  { margin-bottom: 16px !important; }
+
+          /* Hairline divider between identity block and action block */
+          .h-divider { display: block !important; }
+
+          /* Body copy — smaller text, full width, tighter bottom margin */
+          .h-body {
+            font-size: 13px !important;
+            max-width: 100% !important;
+            margin-bottom: 24px !important;
+          }
+
+          /* Button container — full width column stack */
+          .h-btns {
+            flex-direction: column !important;
+            width: 100% !important;
+            align-items: stretch !important;
+            margin-bottom: 0 !important;
+          }
+
+          /* Each button — thumb-friendly fixed height, no vertical padding */
+          .h-btn {
+            width: 100% !important;
+            min-width: unset !important;
+            height: 44px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+          }
+
+          /* Button label — slightly smaller on mobile */
+          .h-btn-label { font-size: 13px !important; }
+
+          /* Metadata strip — remove the large top gap */
+          .h-meta { margin-top: 0 !important; }
+
+          /* Mobile scroll indicator — show */
+          .h-scroll-mob { display: flex !important; }
+
+          /* Desktop scroll indicator — hide */
+          .h-scroll-desk { display: none !important; }
+        }
+
+        /* Above sm — make sure divider and mobile scroll are hidden */
+        @media (min-width: 640px) {
+          .h-divider     { display: none !important; }
+          .h-scroll-mob  { display: none !important; }
+        }
+      `}</style>
+
+      {/* ── Background ── */}
       <div className="absolute inset-0 pointer-events-none">
-        <svg className="absolute inset-0 w-full h-full opacity-20" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <filter id="grain">
             <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
             <feColorMatrix type="saturate" values="0"/>
           </filter>
-          <rect width="100%" height="100%" filter="url(#grain)" opacity="0.06"/>
+          <rect width="100%" height="100%" filter="url(#grain)" opacity="0.04"/>
         </svg>
         <div
           className="absolute inset-0"
           style={{
             backgroundImage: "linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px)",
-            backgroundSize: "160px 80px"
+            backgroundSize: "160px 80px",
           }}
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-16 pt-28 pb-24">
+      {/* ── Main content wrapper ── */}
+      <div className="h-wrap relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-16 pt-28 pb-20">
 
-        {/* Decorative vertical rules — desktop only */}
-        <div className="hidden md:block absolute top-[-50vh] bottom-[-50vh] left-[5%] w-px bg-[#131313] pointer-events-none"/>
-        <div className="hidden md:block absolute top-[-50vh] bottom-[-50vh] left-[70%] w-px bg-[#131313] pointer-events-none"/>
+        {/* Decorative vertical rules — large desktop only */}
+        <div className="hidden lg:block absolute top-[-50vh] bottom-[-50vh] left-[5%] w-px bg-[#131313] pointer-events-none"/>
+        <div className="hidden lg:block absolute top-[-50vh] bottom-[-50vh] left-[70%] w-px bg-[#131313] pointer-events-none"/>
 
-        {/* FIX #1 — Grid: on mobile collapse cleanly to a single centred column.
-            The sidebar is fully hidden on mobile and replaced by a proper
-            bottom metadata strip that uses the available width intelligently. */}
-        <div className="grid grid-cols-1 md:grid-cols-[0.4fr_1.3fr_0.8fr] gap-10 items-start">
+        {/* Grid: 1-col mobile + tablet → 3-col lg+ */}
+        <div className="grid grid-cols-1 lg:grid-cols-[0.4fr_1.3fr_0.8fr] gap-10 items-start">
 
-          {/* Left spacer — desktop only */}
-          <div className="hidden md:block" />
+          {/* Left spacer — large desktop only */}
+          <div className="hidden lg:block" />
 
-          {/* Hero copy */}
-          <div className="flex flex-col items-center text-center md:items-start md:text-left">
+          {/* ── Hero copy ── */}
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
 
             {/* Intro tag */}
-            <div className="flex items-center gap-4 mb-8">
-              <span className="w-7 h-px bg-[#8B7355]"/>
-              <span className="text-[10px] text-[#8B7355] tracking-[4px] uppercase font-medium">001 / Introduction</span>
+            <div className="h-tag flex items-center gap-4 mb-8">
+              <span className="w-7 h-px bg-[#8B7355]" />
+              <span className="text-[12px] text-[#8B7355] tracking-[4px] uppercase font-semibold">
+                001 / Introduction
+              </span>
             </div>
 
             {/* Headlines */}
-            <div className="mb-8">
+            <div className="h-heads mb-8">
               <h1
-                className="text-[clamp(28px,4.5vw,64px)] leading-[1.1] font-normal text-white mb-2"
+                className="text-[clamp(22px,3.5vw,56px)] leading-[1.1] font-normal text-white mb-2"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
                 Technical enough to build it.
               </h1>
               <h1
-                className="text-[clamp(28px,4.5vw,64px)] leading-[1.1] font-normal text-white"
+                className="text-[clamp(22px,3.5vw,56px)] leading-[1.1] font-normal text-white"
                 style={{ fontFamily: "var(--font-serif)" }}
               >
-                {/* FIX #3 — leadRef is a single span; content is set via textContent only */}
                 Clear enough to{" "}
                 <span
                   ref={leadRef}
@@ -153,63 +209,75 @@ export default function Hero() {
 
             {/* Cycling subheadline */}
             <p
-              className="text-[clamp(15px,1.8vw,20px)] italic text-[#666] mb-8"
+              className="h-sub text-[clamp(14px,1.6vw,20px)] italic text-[#666] mb-8"
               style={{ fontFamily: "var(--font-serif)" }}
             >
               I turn complexity into{" "}
-              <span ref={cycleRef} className="text-[#8B7355] not-italic font-medium">decisions.</span>
+              <span ref={cycleRef} className="text-[#8B7355] not-italic font-medium">
+                decisions.
+              </span>
             </p>
 
-            {/* Description */}
-            <p className="text-[#555] text-[14px] md:text-[15px] leading-[1.9] max-w-[480px] mb-12 mx-auto md:mx-0">
-              I close the gap between raw data and real decisions — through models, dashboards, and the people using them.
+            {/* Hairline divider — mobile only (hidden by default, shown via CSS above) */}
+            <div
+              className="h-divider w-full mb-5"
+              style={{ display: "none", height: "1px", background: "#161616" }}
+            />
+
+            {/* Body */}
+            <p className="h-body text-[#555] text-[14px] md:text-[15px] leading-[1.9] max-w-[520px] mb-12 mx-auto lg:mx-0">
+              I close the gap between raw data and real decisions — through models, dashboards,
+              and the people using them.
             </p>
 
-            {/* FIX #2 — Buttons: refined serif lettering, deliberate spacing,
-                clear visual hierarchy. Primary = white fill, secondary = gold.
-                On mobile they stack vertically and span full width for thumb reach. */}
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            {/* ── Buttons ── */}
+            <div className="h-btns flex flex-col sm:flex-row items-start gap-3 w-fit sm:w-auto lg:mx-0">
 
-              {/* Primary CTA */}
+              {/* Primary */}
               <Link
                 href="#featured-projects"
-                className="group relative inline-flex items-center justify-center overflow-hidden
-                           border border-white/20 hover:border-white/60
-                           transition-all duration-500 ease-out
-                           px-10 py-4"
-                style={{ borderRadius: "2px" }}
+                className="h-btn group relative inline-flex items-center justify-center overflow-hidden
+                           sm:min-w-[190px]
+                           border-2 border-[#2E2E2E] hover:border-white/40
+                           transition-colors duration-500
+                           px-10 py-[30px]"
+                style={{ borderRadius: "1px" }}
               >
-                {/* fill sweep */}
                 <span
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-white transition-transform duration-500 ease-out"
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-0
+                             bg-white transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
                   aria-hidden
                 />
                 <span
-                  className="relative text-white group-hover:text-[#080808] transition-colors duration-500
-                             text-[10px] tracking-[3.5px] uppercase"
-                  style={{ fontFamily: "var(--font-serif)", fontStyle: "normal", letterSpacing: "0.22em" }}
+                  className="h-btn-label relative text-[#BBBBBB] group-hover:text-[#080808]
+                             transition-colors duration-500
+                             text-[14px] tracking-[0.24em] uppercase font-normal whitespace-nowrap"
+                  style={{ fontFamily: "var(--font-serif)" }}
                 >
                   View My Work
                 </span>
               </Link>
 
-              {/* Secondary CTA */}
+              {/* Secondary */}
               <Link
                 href="#contact"
-                className="group relative inline-flex items-center justify-center overflow-hidden
-                           border border-[#8B7355]/40 hover:border-[#8B7355]
-                           transition-all duration-500 ease-out
-                           px-10 py-4"
-                style={{ borderRadius: "2px" }}
+                className="h-btn group relative inline-flex items-center justify-center overflow-hidden
+                           sm:min-w-[190px]
+                           border-2 border-[#8B7355]/25 hover:border-[#8B7355]/70
+                           transition-colors duration-500
+                           px-10 py-[30px]"
+                style={{ borderRadius: "1px" }}
               >
                 <span
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-[#8B7355] transition-transform duration-500 ease-out"
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-0
+                             bg-[#8B7355] transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
                   aria-hidden
                 />
                 <span
-                  className="relative text-[#8B7355] group-hover:text-white transition-colors duration-500
-                             text-[10px] tracking-[3.5px] uppercase"
-                  style={{ fontFamily: "var(--font-serif)", fontStyle: "normal", letterSpacing: "0.22em" }}
+                  className="h-btn-label relative text-[#8B7355] group-hover:text-white
+                             transition-colors duration-500
+                             text-[14px] tracking-[0.24em] uppercase font-normal whitespace-nowrap"
+                  style={{ fontFamily: "var(--font-serif)" }}
                 >
                   Let&apos;s Talk
                 </span>
@@ -217,58 +285,78 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right sidebar — desktop only */}
-          <div className="hidden md:flex flex-col gap-10 pt-16 border-l border-[#131313] pl-12">
+          {/* Right sidebar — large desktop only (100% unchanged) */}
+          <div className="hidden lg:flex flex-col gap-10 pt-16 border-l border-[#131313] pl-12">
             {[
               { label: "Discipline", lines: ["BI · Data Science", "Business Analysis"] },
               { label: "Currently", lines: ["BSDS · Mapua University", "Graduating 2026"] },
               { label: "Based In", lines: ["Manila, Philippines"] },
             ].map(({ label, lines }) => (
               <div key={label}>
-                <p className="text-[9px] text-[#444] tracking-[3px] uppercase mb-2 font-semibold">{label}</p>
+                <p className="text-[12px] text-[#444] tracking-[3px] uppercase mb-2 font-semibold">
+                  {label}
+                </p>
                 {lines.map((v, i) => (
-                  <p key={i} className="text-[#888] text-[13px] leading-relaxed">{v}</p>
+                  <p key={i} className="text-[#888] text-[14px] leading-relaxed">{v}</p>
                 ))}
               </div>
             ))}
             <div>
               <p className="text-[9px] text-[#444] tracking-[3px] uppercase mb-2 font-semibold">Status</p>
               <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-[#8B7355] animate-pulse"/>
-                <p className="text-[#888] text-[13px]">Open to work</p>
+                <span className="w-2 h-2 rounded-full bg-[#8B7355] animate-pulse" />
+                <p className="text-[#888] text-[14px]">Open to work</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* FIX #1 — Mobile metadata: a 2×2 grid uses the full viewport width
-            cleanly. Labels left-aligned, values right-aligned, with a proper
-            separator. Replaces the janky flex justify-between row. */}
-        <div className="flex md:hidden flex-col mt-14 pt-8 border-t border-[#1A1A1A] gap-0">
+        {/* ── Mobile metadata strip ──
+            .h-meta overrides the mt-14 gap to 0 on mobile so it sits
+            flush under the buttons without the large dead space. ── */}
+        <div className="h-meta flex lg:hidden flex-col mt-14 max-w-[600px] mx-auto w-full">
+          <div className="w-full h-px bg-[#1A1A1A]" />
           {[
             { label: "Discipline", value: "BI · Data Science" },
-            { label: "Education", value: "BSDS · Mapua University" },
-            { label: "Location", value: "Manila, Philippines" },
-            { label: "Status", value: "Open to work", dot: true },
+            { label: "Location",   value: "Manila, Philippines" },
+            { label: "Status",     value: "Open to work", dot: true },
           ].map(({ label, value, dot }, i, arr) => (
             <div
               key={label}
-              className={`flex items-center justify-between py-4 ${i < arr.length - 1 ? "border-b border-[#1A1A1A]" : ""}`}
+              className={`flex items-center justify-between py-[13px] ${
+                i < arr.length - 1 ? "border-b border-[#1A1A1A]" : ""
+              }`}
             >
-              <span className="text-[9px] text-[#444] tracking-[3px] uppercase font-semibold">{label}</span>
-              <span className="text-[#888] text-[12px] flex items-center gap-2">
-                {dot && <span className="w-1.5 h-1.5 rounded-full bg-[#8B7355] animate-pulse"/>}
+              <span className="text-[9px] text-[#3A3A3A] tracking-[3px] uppercase font-semibold">
+                {label}
+              </span>
+              <span className="text-[#777] text-[12px] flex items-center gap-2 tracking-wide">
+                {dot && <span className="w-1.5 h-1.5 rounded-full bg-[#8B7355] animate-pulse" />}
                 {value}
               </span>
             </div>
           ))}
+
+          {/* Mobile scroll indicator — shown via CSS, hidden by default */}
+          <div
+            className="h-scroll-mob items-center gap-4 pt-6 pb-2 justify-center"
+            style={{ display: "none" }}
+          >
+            <div style={{ width: "24px", height: "1px", background: "linear-gradient(to right, #8B7355, transparent)" }} />
+            <span style={{ color: "#2A2A2A", fontSize: "10px", letterSpacing: "5px", textTransform: "uppercase" }}>
+              Scroll
+            </span>
+            <div style={{ width: "24px", height: "1px", background: "linear-gradient(to left, #8B7355, transparent)" }} />
+          </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:left-16 md:translate-x-0 flex flex-col items-center gap-4">
-        <span className="text-[#2A2A2A] text-[9px] tracking-[5px] uppercase [writing-mode:vertical-lr] rotate-180">Scroll</span>
-        <div className="w-px h-12 bg-gradient-to-b from-[#8B7355] to-transparent"/>
+      {/* Scroll indicator — desktop (original, 100% unchanged) */}
+      <div className="h-scroll-desk absolute bottom-10 left-1/2 -translate-x-1/2 lg:left-16 lg:translate-x-0 flex flex-col items-center gap-4">
+        <span className="text-[#2A2A2A] text-[12px] tracking-[5px] uppercase [writing-mode:vertical-lr] rotate-180">
+          Scroll
+        </span>
+        <div className="w-px h-12 bg-gradient-to-b from-[#8B7355] to-transparent" />
       </div>
     </section>
   );

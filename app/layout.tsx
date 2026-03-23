@@ -12,6 +12,7 @@ const dmSerif = DM_Serif_Display({
 export const metadata: Metadata = {
   title: "Shania Keith Dela Vega",
   description: "Portfolio — BI, Data Science, Business Analysis",
+  viewport: "width=device-width, initial-scale=1",
 };
 
 export default function RootLayout({
